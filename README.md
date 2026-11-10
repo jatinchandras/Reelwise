@@ -1,13 +1,13 @@
-# Slate
+# ReelWise (Slate)
 
-Production management for the direction department, from first draft to call sheet.
+Production management Tool for the direction department, from first draft to call sheet.
 
 Write the script, break it down scene by scene, cast it, schedule the shoot, and tell
-the cast and crew when and where to turn up. "Slate" is a working name; rename freely.
+the cast and crew when and where to turn up. "Slate" is a working name;.
 
 ## What it does
 
-| Stage | What Slate does |
+| Stage | What ReelWise does |
 | --- | --- |
 | **Script** | `web/editor/` is the Sluglines screenplay editor (scene headings, action, dialogue, autocomplete, title page, export). Save as `.sluglines`. |
 | **Breakdown** | Parses scene headings (INT/EXT, location, time of day) and pulls out characters, props, vehicles, animals, effects, crowds and an estimated page-eighths length per scene. Rolls requirements up per location. |
