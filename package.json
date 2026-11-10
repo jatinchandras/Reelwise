@@ -1,0 +1,14 @@
+{
+  "name": "slate",
+  "version": "0.1.0",
+  "description": "End-to-end film production management for the direction department: script writing, breakdown, casting, scheduling and crew notifications.",
+  "type": "module",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "test": "node --test",
+    "demo": "node src/demo.js"
+  },
+  "engines": { "node": ">=18" },
+  "license": "MIT"
+}

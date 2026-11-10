@@ -1,0 +1,30 @@
+{
+  "title": "The Last Reel",
+  "author": "Sample Author",
+  "lines": [
+    {"type":"scene-heading","text":"INT. OLD CINEMA - DAY"},
+    {"type":"action","text":"DEV (40s) sweeps dust off a PROJECTOR. A few VILLAGERS peek in through the door."},
+    {"type":"character","text":"DEV"},
+    {"type":"dialogue","text":"Thirty years and it still smells like popcorn."},
+    {"type":"character","text":"MEERA (O.S.)"},
+    {"type":"dialogue","text":"Dev, the owner wants the keys back by evening."},
+    {"type":"scene-heading","text":"EXT. VILLAGE ROAD - DAY"},
+    {"type":"action","text":"MEERA (30s) rides a BICYCLE past a parked JEEP. A DOG follows her."},
+    {"type":"character","text":"MEERA"},
+    {"type":"dialogue","text":"Wait for me!"},
+    {"type":"scene-heading","text":"INT. OLD CINEMA - NIGHT"},
+    {"type":"action","text":"The PROJECTOR whirs to life. FOG drifts through the beam. DEV and MEERA sit alone in the empty hall."},
+    {"type":"character","text":"MEERA"},
+    {"type":"dialogue","text":"It still works."},
+    {"type":"character","text":"DEV"},
+    {"type":"dialogue","text":"It always did. We just stopped coming."},
+    {"type":"scene-heading","text":"EXT. RIVER BANK - NIGHT"},
+    {"type":"action","text":"RAIN hammers the water. INSPECTOR RAO (50s) steps from a JEEP holding a LANTERN."},
+    {"type":"character","text":"RAO"},
+    {"type":"dialogue","text":"Out here at this hour?"},
+    {"type":"scene-heading","text":"INT. OLD CINEMA - DAY"},
+    {"type":"action","text":"The hall is full. A packed CROWD faces the screen. DEV watches from the back, a FILM CAN in his hands."},
+    {"type":"character","text":"DEV"},
+    {"type":"dialogue","text":"Roll it."}
+  ]
+}

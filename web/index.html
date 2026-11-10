@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Slate — production board</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+  /* Design: a production stripboard. Scenes are strips coloured the way crews
+     colour them (INT day white, EXT day yellow, INT night blue, EXT night green),
+     separated by black end-of-day bars. Everything else stays quiet. */
+  :root {
+    --board: #D3D7DB;
+    --panel: #F4F5F6;
+    --ink: #15171A;
+    --ink-2: #4A5058;
+    --line: #9AA1A9;
+    --int-day: #F6F4EC;
+    --ext-day: #F2D14B;
+    --int-night: #86AEDB;
+    --ext-night: #82C294;
+    --danger: #B3261E;
+    --focus: #0B57D0;
+    --display: 'Barlow Condensed', 'Arial Narrow', system-ui, sans-serif;
+    --body: 'Barlow', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--board); color: var(--ink); font: 400 15px/1.5 var(--body); }
+  body { padding: env(safe-area-inset-top, 0) env(safe-area-inset-right, 0) env(safe-area-inset-bottom, 0) env(safe-area-inset-left, 0); }
+  h1, h2, h3 { font-family: var(--display); font-weight: 700; margin: 0; letter-spacing: .01em; }
+  h2 { font-size: 26px; }
+  h3 { font-size: 19px; }
+  a { color: inherit; }
+  :focus-visible { outline: 3px solid var(--focus); outline-offset: 2px; }
+
+  .shell { max-width: 1120px; margin: 0 auto; padding: 20px 18px 64px; }
+  header.top { display: flex; align-items: baseline; gap: 18px; flex-wrap: wrap; margin-bottom: 14px; }
+  .wordmark { font: 700 34px/1 var(--display); letter-spacing: .02em; }
+  .project-title { font: 500 20px var(--display); color: var(--ink-2); }
+  .spacer { flex: 1; }
+
+  nav.tabs { display: flex; gap: 4px; overflow-x: auto; border-bottom: 3px solid var(--ink); margin-bottom: 22px; }
+  nav.tabs button {
+    font: 600 18px var(--display); letter-spacing: .02em; border: 0; background: transparent; color: var(--ink-2);
+    padding: 8px 16px; cursor: pointer; white-space: nowrap; border-radius: 4px 4px 0 0;
+  }
+  nav.tabs button:hover { color: var(--ink); background: rgba(255,255,255,.4); }
+  nav.tabs button[aria-selected="true"] { background: var(--ink); color: #fff; }
+
+  .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 4px; padding: 18px; margin-bottom: 18px; }
+  .panel > h3 { margin-bottom: 10px; }
+  .muted { color: var(--ink-2); }
+  .row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  @media (max-width: 800px) { .grid-2 { grid-template-columns: 1fr; } }
+
+  button.btn, label.btn, a.btn {
+    font: 600 15px var(--body); border: 2px solid var(--ink); background: var(--ink); color: #fff;
+    padding: 8px 14px; border-radius: 3px; cursor: pointer; display: inline-block;
+  }
+  button.btn:hover, label.btn:hover, a.btn:hover { background: #2c3036; }
+  button.btn.ghost, label.btn.ghost, a.btn.ghost { background: transparent; color: var(--ink); }
+  a.btn { text-decoration: none; }
+  button.btn.ghost:hover, a.btn.ghost:hover { background: rgba(0,0,0,.07); }
+  button.btn.small { padding: 4px 10px; font-size: 13px; }
+  button.link { background: none; border: 0; color: var(--danger); cursor: pointer; font: inherit; text-decoration: underline; padding: 2px 4px; }
+
+  input, select { font: inherit; padding: 7px 9px; border: 1px solid var(--line); border-radius: 3px; background: #fff; color: var(--ink); min-width: 0; }
+  label.field { display: flex; flex-direction: column; gap: 3px; font-size: 13px; color: var(--ink-2); flex: 1 1 150px; }
+  label.field input { font-size: 15px; color: var(--ink); }
+
+  .empty { padding: 22px; border: 2px dashed var(--line); border-radius: 4px; color: var(--ink-2); text-align: center; }
+  .stat-row { display: flex; gap: 28px; flex-wrap: wrap; margin-top: 8px; }
+  .stat b { font: 700 34px/1 var(--display); display: block; }
+  .stat span { font-size: 13px; color: var(--ink-2); }
+
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th { text-align: left; font: 600 14px var(--display); letter-spacing: .03em; padding: 6px 8px; border-bottom: 2px solid var(--ink); }
+  td { padding: 7px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+  .table-wrap { overflow-x: auto; }
+  .tag { display: inline-block; background: #fff; border: 1px solid var(--line); border-radius: 3px; padding: 0 6px; margin: 1px 3px 1px 0; font-size: 12.5px; }
+
+  /* ---- Stripboard ---- */
+  .day-bar {
+    background: var(--ink); color: #fff; display: flex; gap: 14px; flex-wrap: wrap; align-items: baseline;
+    padding: 6px 12px; margin-top: 14px; font: 600 17px var(--display); letter-spacing: .03em;
+  }
+  .day-bar .when { font-size: 20px; }
+  .day-bar .meta { font-weight: 500; opacity: .85; }
+  .strip {
+    display: grid; grid-template-columns: 54px 1fr auto; gap: 12px; align-items: center;
+    padding: 8px 12px; border: 1px solid #00000040; border-top: 0; background: var(--int-day);
+  }
+  .strip.ext-day { background: var(--ext-day); }
+  .strip.int-night { background: var(--int-night); }
+  .strip.ext-night { background: var(--ext-night); }
+  .strip .num { font: 700 30px/1 var(--display); text-align: center; }
+  .strip .head { font: 600 17px var(--display); letter-spacing: .02em; }
+  .strip .sub { font-size: 13px; color: #1d2126; }
+  .strip .move { display: flex; gap: 6px; align-items: center; }
+  .strip .move input { width: 150px; padding: 4px 6px; }
+  .pinned { font: 700 12px var(--body); background: var(--ink); color: #fff; border-radius: 3px; padding: 1px 6px; margin-left: 6px; }
+  @media (max-width: 700px) { .strip { grid-template-columns: 44px 1fr; } .strip .move { grid-column: 1 / -1; } }
+
+  .conflicts { border-left: 6px solid var(--danger); }
+  .conflicts li { margin: 4px 0; }
+  .ok-note { border-left: 6px solid #2E7D4F; }
+  pre.sheet { background: #fff; border: 1px solid var(--line); padding: 16px; overflow-x: auto; font: 13.5px/1.5 ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace; white-space: pre; }
+  #status { position: fixed; left: 50%; bottom: calc(18px + env(safe-area-inset-bottom, 0)); transform: translateX(-50%); background: var(--ink); color: #fff; padding: 9px 16px; border-radius: 4px; font-weight: 500; opacity: 0; pointer-events: none; z-index: 10; max-width: 90vw; }
+  #status.show { opacity: 1; }
+  #status.err { background: var(--danger); }
+</style>
+</head>
+<body>
+<div class="shell">
+  <header class="top">
+    <div class="wordmark">SLATE</div>
+    <div class="project-title" id="projectTitle"></div>
+    <div class="spacer"></div>
+    <a class="btn ghost" href="/editor/" target="_blank" rel="noopener">Open script editor</a>
+  </header>
+  <nav class="tabs" role="tablist" id="tabs"></nav>
+  <main id="main"></main>
+</div>
+<div id="status" role="status" aria-live="polite"></div>
+
+<script>
+(function () {
+  "use strict";
+  var TABS = [["script", "Script"], ["breakdown", "Breakdown"], ["cast", "Cast and crew"], ["schedule", "Stripboard"], ["callsheet", "Call sheets"]];
+  var P = null;              // project state from the server
+  var tab = (location.hash || "#script").slice(1);
+  if (!TABS.some(function (t) { return t[0] === tab; })) tab = "script";
+  var callSheetDate = null;
+  var callSheetText = "";
+
+  var $ = function (s, r) { return (r || document).querySelector(s); };
+  function esc(v) { return String(v == null ? "" : v).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+  function pretty(date) { return new Date(date + "T00:00:00Z").toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short", year: "numeric", timeZone: "UTC" }); }
+  function say(msg, isErr) {
+    var el = $("#status"); el.textContent = msg; el.className = "show" + (isErr ? " err" : "");
+    clearTimeout(say.t); say.t = setTimeout(function () { el.className = ""; }, 3200);
+  }
+
+  async function api(method, url, body) {
+    var res = await fetch(url, { method: method, headers: { "content-type": "application/json" }, body: body === undefined ? undefined : JSON.stringify(body) });
+    var data = await res.json().catch(function () { return {}; });
+    if (!res.ok) throw new Error(data.error || "Request failed");
+    return data;
+  }
+  async function act(method, url, body, okMsg) {
+    try { var data = await api(method, url, body); P = data; render(); if (okMsg) say(okMsg); return data; }
+    catch (e) { say(e.message, true); }
+  }
+
+  // ---------- views ----------
+  function viewScript() {
+    var b = P.breakdown;
+    var has = b.scenes.length > 0;
+    return '<div class="panel"><h3>Script</h3>' +
+      '<p class="muted">Write in the editor, save a project file (.sluglines), then import it here. Slate reads your scene headings, characters and action lines.</p>' +
+      '<div class="row"><label class="btn" for="importFile">Import script file</label>' +
+      '<input id="importFile" type="file" accept=".sluglines,.json,application/json" hidden>' +
+      '<button class="btn ghost" data-act="sample" type="button">Load sample script</button></div></div>' +
+      (has
+        ? '<div class="panel"><h3>' + esc(b.title) + '</h3><div class="stat-row">' +
+          stat(b.scenes.length, "scenes") + stat(b.characters.length, "characters") + stat(b.locations.length, "locations") +
+          stat((b.totalEighths / 8).toFixed(1), "pages (estimated)") + '</div></div>'
+        : '<div class="empty">No script yet. Import a .sluglines file or load the sample to see the breakdown.</div>');
+  }
+  function stat(n, label) { return '<div class="stat"><b>' + esc(n) + '</b><span>' + esc(label) + '</span></div>'; }
+  function tags(list) { return list.length ? list.map(function (x) { return '<span class="tag">' + esc(x) + '</span>'; }).join("") : '<span class="muted">—</span>'; }
+
+  function viewBreakdown() {
+    var b = P.breakdown;
+    if (!b.scenes.length) return '<div class="empty">Import a script to see the scene breakdown.</div>';
+    var rows = b.scenes.map(function (s) {
+      return '<tr><td><b>' + s.number + '</b></td><td>' + esc(s.heading) + (s.hasCrowd ? '<br><span class="tag">crowd</span>' : '') + '</td><td>' + tags(s.characters) +
+        '</td><td>' + tags(s.props) + '</td><td>' + tags(s.vehicles.concat(s.animals)) + '</td><td>' + tags(s.sfx) + '</td><td>' + s.eighths + '/8</td></tr>';
+    }).join("");
+    var reqs = Object.keys(P.requirements).map(function (loc) {
+      var r = P.requirements[loc];
+      var needs = [].concat(r.props, r.vehicles, r.animals, r.sfx);
+      if (r.needsNightLighting) needs.push("night lighting");
+      if (r.needsCrowd) needs.push("background artists");
+      return '<tr><td><b>' + esc(loc) + '</b></td><td>' + r.scenes.join(", ") + '</td><td>' + tags(needs) + '</td></tr>';
+    }).join("");
+    return '<div class="panel"><h3>Scenes</h3><div class="table-wrap"><table><thead><tr><th>#</th><th>Heading</th><th>Cast</th><th>Props</th><th>Vehicles and animals</th><th>Effects</th><th>Length</th></tr></thead><tbody>' + rows + '</tbody></table></div></div>' +
+      '<div class="panel"><h3>What each location needs</h3><div class="table-wrap"><table><thead><tr><th>Location</th><th>Scenes</th><th>Arrange before the shoot</th></tr></thead><tbody>' + reqs + '</tbody></table></div></div>';
+  }
+
+  function viewCast() {
+    var actors = P.actors, crew = P.crew, chars = P.breakdown.characters;
+    var castRows = chars.map(function (c) {
+      var opts = '<option value="">Uncast</option>' + actors.map(function (a) { return '<option value="' + esc(a.id) + '"' + (P.assignments[c] === a.id ? " selected" : "") + '>' + esc(a.name) + '</option>'; }).join("");
+      return '<tr><td><b>' + esc(c) + '</b></td><td><select data-cast="' + esc(c) + '" aria-label="Actor for ' + esc(c) + '">' + opts + '</select></td></tr>';
+    }).join("");
+    return '<div class="grid-2"><div>' +
+      '<div class="panel"><h3>Casting</h3>' +
+      (chars.length
+        ? '<div class="row" style="margin-bottom:10px"><button class="btn" data-act="autocast" type="button">Auto-cast from actor roles</button><span class="muted">' + (P.uncast.length ? P.uncast.length + ' uncast' : 'All roles cast') + '</span></div>' +
+          '<table><thead><tr><th>Character</th><th>Actor</th></tr></thead><tbody>' + castRows + '</tbody></table>'
+        : '<div class="empty">Import a script to cast its characters.</div>') + '</div>' +
+      '<div class="panel"><h3>Actors</h3>' +
+      '<form id="actorForm" class="row"><label class="field">Name<input name="name" required></label><label class="field">Email<input name="email" type="email"></label><label class="field">Phone<input name="phone"></label>' +
+      '<label class="field">Plays (character names, comma separated)<input name="roles" placeholder="DEV, MEERA"></label>' +
+      '<label class="field">Unavailable dates<input name="unavailable" placeholder="2026-12-01, 2026-12-09"></label>' +
+      '<button class="btn" type="submit">Add actor</button></form>' +
+      (actors.length ? '<table style="margin-top:12px"><tbody>' + actors.map(function (a) {
+        return '<tr><td><b>' + esc(a.name) + '</b><br><span class="muted">' + esc(a.email || a.phone || "no contact") + '</span></td><td>' + tags(a.roles || []) + (a.unavailable && a.unavailable.length ? '<br><span class="muted">Away: ' + esc(a.unavailable.join(", ")) + '</span>' : '') + '</td><td><button class="link" data-del="actors/' + esc(a.id) + '" type="button">Remove</button></td></tr>';
+      }).join("") + '</tbody></table>' : '<p class="muted">No actors yet.</p>') + '</div></div>' +
+      '<div><div class="panel"><h3>Crew</h3>' +
+      '<form id="crewForm" class="row"><label class="field">Name<input name="name" required></label><label class="field">Department<input name="department" placeholder="Camera"></label><label class="field">Role<input name="role" placeholder="DOP"></label>' +
+      '<label class="field">Email<input name="email" type="email"></label><label class="field">Phone<input name="phone"></label><button class="btn" type="submit">Add crew member</button></form>' +
+      (crew.length ? '<table style="margin-top:12px"><tbody>' + crew.map(function (c) {
+        return '<tr><td><b>' + esc(c.name) + '</b><br><span class="muted">' + esc([c.role, c.department].filter(Boolean).join(" · ") || "") + '</span></td><td>' + esc(c.email || c.phone || "no contact") + '</td><td><button class="link" data-del="crew/' + esc(c.id) + '" type="button">Remove</button></td></tr>';
+      }).join("") + '</tbody></table>' : '<p class="muted">No crew yet.</p>') + '</div></div></div>';
+  }
+
+  function conflictText(c) {
+    var actor = P.actors.find(function (a) { return a.id === c.actorId; });
+    if (c.type === "actor-unavailable") return (c.actorName || (actor && actor.name) || "An actor") + " is unavailable on " + pretty(c.date) + " but is needed in scene " + c.scene + ".";
+    if (c.type === "overfull-day") return pretty(c.date) + " has " + c.eighths + " eighths scheduled; the limit is " + c.max + ".";
+    if (c.type === "company-move") return pretty(c.date) + " has more than one location: " + c.locations.join(" and ") + ".";
+    if (c.type === "non-shoot-day") return "Scene " + c.scene + " is pinned to " + pretty(c.date) + ", which is not a shoot day.";
+    return c.type;
+  }
+  function stripClass(s) { return (s.setting === "EXT" ? "ext" : "int") + "-" + (s.isNight ? "night" : "day"); }
+
+  function viewSchedule() {
+    var S = P.schedule, scenes = P.breakdown.scenes;
+    if (!scenes.length) return '<div class="empty">Import a script to build the stripboard.</div>';
+    var byNum = {}; scenes.forEach(function (s) { byNum[s.number] = s; });
+    var o = S.options;
+    var html = '<div class="panel"><h3>Schedule settings</h3><form id="optForm" class="row"><label class="field">First shoot date<input type="date" name="startDate" value="' + esc(o.startDate) + '"></label>' +
+      '<label class="field">Most page-eighths per day<input type="number" min="1" name="maxEighthsPerDay" value="' + esc(o.maxEighthsPerDay) + '"></label><button class="btn" type="submit">Reschedule</button></form>' +
+      '<p class="muted" style="margin-bottom:0">Slate groups scenes by location, keeps day and night apart and avoids dates your actors are away. Move a scene to override it; pinned scenes stay put.</p></div>';
+    html += S.conflicts.length
+      ? '<div class="panel conflicts"><h3>' + S.conflicts.length + ' to resolve</h3><ul>' + S.conflicts.map(function (c) { return '<li>' + esc(conflictText(c)) + '</li>'; }).join("") + '</ul></div>'
+      : '<div class="panel ok-note"><b>No conflicts.</b> Every scene has a day and nobody is double-booked.</div>';
+    if (S.unscheduled.length) html += '<div class="panel conflicts"><b>Could not place:</b> scenes ' + S.unscheduled.join(", ") + '.</div>';
+    html += S.days.map(function (d, i) {
+      var strips = d.sceneNumbers.map(function (n) {
+        var s = byNum[n], pinned = P.manual && P.manual[n];
+        return '<div class="strip ' + stripClass(s) + '"><div class="num">' + n + '</div><div><div class="head">' + esc(s.heading) + (pinned ? '<span class="pinned">Pinned</span>' : '') + '</div>' +
+          '<div class="sub">' + esc(s.characters.join(", ") || "No cast") + ' · ' + s.eighths + '/8</div></div>' +
+          '<div class="move"><input type="date" aria-label="New date for scene ' + n + '" value="' + esc(d.date) + '" data-date-for="' + n + '">' +
+          '<button class="btn small" data-move="' + n + '" type="button">Move</button>' + (pinned ? '<button class="btn small ghost" data-unpin="' + n + '" type="button">Unpin</button>' : '') + '</div></div>';
+      }).join("");
+      return '<div class="day-bar"><span class="when">Day ' + (i + 1) + ' · ' + esc(pretty(d.date)) + '</span><span class="meta">' + esc(d.location) + ' · ' + (d.night ? 'night' : 'day') + ' · call ' + esc(d.callTime) + ' · ' + d.eighths + '/8</span></div>' + strips;
+    }).join("");
+    return html;
+  }
+
+  function viewCallSheet() {
+    var S = P.schedule;
+    if (!S.days.length) return '<div class="empty">Schedule some scenes first, then call sheets appear here.</div>';
+    var dates = Array.from(new Set(S.days.map(function (d) { return d.date; })));
+    if (!callSheetDate || dates.indexOf(callSheetDate) < 0) callSheetDate = dates[0];
+    var options = dates.map(function (d) { return '<option value="' + d + '"' + (d === callSheetDate ? " selected" : "") + '>' + esc(pretty(d)) + '</option>'; }).join("");
+    return '<div class="panel"><h3>Call sheet</h3><div class="row"><label class="field" style="max-width:260px">Shoot day<select id="sheetDate">' + options + '</select></label>' +
+      '<label class="field" style="max-width:200px">Message type<select id="notifyReason"><option value="scheduled">New call</option><option value="reminder">Reminder</option><option value="changed">Schedule change</option></select></label>' +
+      '<button class="btn" data-act="notify" type="button">Send to cast and crew</button></div>' +
+      '<p class="muted">Messages go to the outbox folder by default. Connect email or SMS in <code>src/core/notifications.js</code>.</p>' +
+      '<pre class="sheet" id="sheetText">' + esc(callSheetText || "Loading…") + '</pre></div>';
+  }
+
+  var VIEWS = { script: viewScript, breakdown: viewBreakdown, cast: viewCast, schedule: viewSchedule, callsheet: viewCallSheet };
+
+  function render() {
+    $("#projectTitle").textContent = P && P.breakdown.scenes.length ? P.breakdown.title : "";
+    $("#tabs").innerHTML = TABS.map(function (t) { return '<button role="tab" aria-selected="' + (t[0] === tab) + '" data-tab="' + t[0] + '">' + t[1] + '</button>'; }).join("");
+    $("#main").innerHTML = P ? VIEWS[tab]() : '<div class="empty">Loading…</div>';
+    if (tab === "callsheet" && P && P.schedule.days.length) loadSheet();
+  }
+
+  async function loadSheet() {
+    var want = callSheetDate;
+    try {
+      var res = await fetch("/api/callsheet/" + want + "?format=text");
+      var text = await res.text();
+      callSheetText = text;
+      var el = $("#sheetText"); if (el && callSheetDate === want) el.textContent = text;
+    } catch (e) { say("Couldn't load the call sheet", true); }
+  }
+
+  // ---------- events ----------
+  document.addEventListener("click", async function (e) {
+    var t = e.target.closest("button, [data-tab]"); if (!t) return;
+    if (t.dataset.tab) { tab = t.dataset.tab; location.hash = tab; render(); return; }
+    if (t.dataset.act === "sample") { var s = await api("GET", "/api/sample"); await act("PUT", "/api/script", s, "Sample script loaded"); return; }
+    if (t.dataset.act === "autocast") return act("POST", "/api/casting/auto", undefined, "Cast assigned from actor roles");
+    if (t.dataset.act === "notify") {
+      try {
+        var r = await api("POST", "/api/notify", { date: callSheetDate, reason: $("#notifyReason").value });
+        say("Sent " + r.sent + " message" + (r.sent === 1 ? "" : "s"));
+      } catch (err) { say(err.message, true); }
+      return;
+    }
+    if (t.dataset.del) return act("DELETE", "/api/" + t.dataset.del, undefined, "Removed");
+    if (t.dataset.move) {
+      var date = $('[data-date-for="' + t.dataset.move + '"]').value;
+      var res = await act("POST", "/api/schedule/move", { scene: Number(t.dataset.move), date: date });
+      if (res) say("Scene " + t.dataset.move + " moved to " + pretty(date) + ". " + (res.changes.length > 1 ? res.changes.length + " scenes changed day." : ""));
+      return;
+    }
+    if (t.dataset.unpin) return act("POST", "/api/schedule/unpin", { scene: Number(t.dataset.unpin) }, "Scene " + t.dataset.unpin + " unpinned");
+  });
+
+  document.addEventListener("change", async function (e) {
+    var t = e.target;
+    if (t.id === "importFile" && t.files[0]) {
+      try { var doc = JSON.parse(await t.files[0].text()); await act("PUT", "/api/script", doc, "Imported " + t.files[0].name); }
+      catch (err) { say("That file isn't a Sluglines project", true); }
+      return;
+    }
+    if (t.dataset.cast) return act("PUT", "/api/casting", { character: t.dataset.cast, actorId: t.value || null }, "Casting updated");
+    if (t.id === "sheetDate") { callSheetDate = t.value; callSheetText = ""; render(); }
+  });
+
+  document.addEventListener("submit", function (e) {
+    e.preventDefault();
+    var f = e.target, d = Object.fromEntries(new FormData(f).entries());
+    var list = function (v) { return (v || "").split(",").map(function (x) { return x.trim(); }).filter(Boolean); };
+    if (f.id === "actorForm") return act("POST", "/api/actors", { name: d.name, email: d.email, phone: d.phone, roles: list(d.roles).map(function (r) { return r.toUpperCase(); }), unavailable: list(d.unavailable) }, "Actor added");
+    if (f.id === "crewForm") return act("POST", "/api/crew", d, "Crew member added");
+    if (f.id === "optForm") return act("PUT", "/api/schedule/options", { startDate: d.startDate, maxEighthsPerDay: Number(d.maxEighthsPerDay) }, "Schedule updated");
+  });
+
+  window.addEventListener("hashchange", function () {
+    var h = location.hash.slice(1);
+    if (TABS.some(function (t) { return t[0] === h; })) { tab = h; render(); }
+  });
+
+  api("GET", "/api/project").then(function (p) { P = p; render(); }).catch(function () { say("Can't reach the Slate server. Run npm start.", true); });
+})();
+</script>
+</body>
+</html>
